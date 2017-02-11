@@ -24,7 +24,7 @@ scs.overall <- scs[1,]
 scs <- scs[-1, ]
 
 
-scs_instr <- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets/master/instr_scs.tsv", sep="\t", header=TRUE)
+scs_instr <- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets/master/instr_all.tsv", sep="\t", header=TRUE)
 
 schools <- c(cfa, scs)
 schools_names <- c("CFA - College of Fine Arts", 
@@ -130,7 +130,7 @@ ui <- dashboardPage(
                                    selected = "DAVID KOSBIE"),
                        selectInput(inputId = 'faculty2', label = 'Select Faculty 2', 
                                    choices = sort(as.character(unique(school$instructor))), 
-                                   selected = "DAVID KOSBIE"),
+                                   selected = "BROOKE FEENEY"),
                        chartJSRadarOutput("faculty_radar", width = "450", height = "300")
                     )
                  )
