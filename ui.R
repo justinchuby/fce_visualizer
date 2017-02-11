@@ -130,7 +130,7 @@ ui <- dashboardPage(
                                    selected = "DAVID KOSBIE"),
                        selectInput(inputId = 'faculty2', label = 'Select Faculty 2', 
                                    choices = sort(as.character(unique(school$instructor))), 
-                                   selected = "BROOKE FEENEY"),
+                                   selected = "AMY OGAN"),
                        chartJSRadarOutput("faculty_radar", width = "450", height = "300")
                     )
                  )
