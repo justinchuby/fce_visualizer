@@ -55,8 +55,8 @@ sidebar <- dashboardSidebar(
       menuItem("Courses", tabName = "course", icon = icon("book")),
       menuItem("Faculty", tabName = "faculty", icon = icon("user-circle")),
       menuItem("Trending", tabName = "trend", icon = icon("line-chart")),
-      menuItem("Dataset", tabName = "datasets", icon = icon("table")),
-      menuItem("Roast", tabName = "rateMyProfessor", icon = icon("fire"))
+      menuItem("Roast", tabName = "rateMyProfessor", icon = icon("fire")),
+      menuItem("Dataset", tabName = "datasets", icon = icon("table"))
    )
 )
 
@@ -79,17 +79,33 @@ ui <- dashboardPage(
                  selectInput(inputId = 'school_tab', label = 'Select College', 
                              choices = schools_names, 
                              selected = "scs"),
-                 dataTableOutput('fcetable')
+                 dataTableOutput('fcetable'),
+                 
+                 box(
+                    h4("Course Comparison"), 
+                    helpText("Select two courses to view course comparisons."), tags$br(),
+                    selectInput(inputId = 'course1', label = 'Select Course 1', 
+                                choices = sort(unique(school$id.name)), 
+                                selected = "15112 - FNDMTLS OF PGMG & CS"),
+                    selectInput(inputId = 'course2', label = 'Select Course 2', 
+                                choices = sort(unique(school$id.name)), 
+                                selected = "15110 - PRINCPLS OF COMPUTNG"),
+                    tabsetPanel(
+                       tabPanel(
+                          plotOutput(outputId = "plotb2", height = "500px")
+                       )
+                    )
+                 )
          ),
          
          tabItem(tabName = "faculty",
                  h2("Faculty Profile"), tags$br(),
-                 p("Explore what a faculty member has taught before and what opinions everybody gas."),
+                 p("Explore what a faculty member has taught before and what opinions everybody gives."),
                  fluidRow(
                     box(
                        h4("Faculty Profile"),
                        helpText("Select one faculty members to view faculty basic statistics."), tags$br(),
-                       selectInput(inputId = 'faculty', label = 'Select a Faculty Memberr', 
+                       selectInput(inputId = 'faculty', label = 'Select a Faculty Member', 
                                    choices = sort(as.character(unique(instructor$Instructor))), 
                                    selected = "ANIL ADA"),
                        tabsetPanel(
@@ -122,6 +138,8 @@ ui <- dashboardPage(
          
          tabItem(tabName = "course",
                  h2("Course Profile"), tags$br(),
+                 p("Explore what how a course hour spend per week, overall course rating, and overall teaching has changed overtime. 
+                   You can compare between two courses and find out who taught this course before."),
                  fluidRow(
                     # Course Basic Stats
                     box(
@@ -148,6 +166,15 @@ ui <- dashboardPage(
                           tabPanel("Number of Enrollment",
                                    plotlyOutput(outputId = "num_enrollment", height = "400px", width = "600px"),
                                    helpText("Hours per week is calculated as an aggregate mean of student reported hours.")
+                          ),
+                          
+                          tabPanel("Teaching History",
+                                   fluidRow(
+                                      column(
+                                         DT::dataTableOutput("courseTable"), width = 12
+                                      )
+                                   )
+                                   
                           )
                       
                       )

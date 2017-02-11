@@ -10,7 +10,7 @@ library(data.table)
 library(shinydashboard)
 library(radarchart)
 library(DT)
-
+library(chartjs)
 
 # Reading in Data
 schools <- c("cfa", "scs")
@@ -91,7 +91,7 @@ server <- function(input, output, session) {
       }
       x <- list(title = "Term")
       y <- list(title = "Overall Rating")
-      p <- plot_ly(stats, x = ~year.term, y = ~enrollment, name = 'Number of enrollment', type = 'scatter', mode = 'lines') %>%
+      p <- plot_ly(stats, x = ~as.numeric(year.term), y = ~as.numeric(enrollment), name = 'Number of enrollment', type = 'scatter', mode = 'lines') %>%
          layout(xaxis = x, yaxis = y, title = plot.t)
       ggplotly(p)
    })
@@ -174,6 +174,18 @@ server <- function(input, output, session) {
       # render radar chart
       chartJSRadar(scores = scores, labs = labs, maxScale = 5, showToolTipLabel = TRUE)
    })
+   
+   
+   # Course: course table
+   output$courseTable <- DT::renderDataTable(DT::datatable({
+      data <- school[which(school$course.id == parse_courseID(input$course)), c("year", "term", "instructor", "hrs.per.week", "overall.course")]
+      data <- data[order(as.numeric(data$year), decreasing = TRUE),]
+      names(data) <- c("Year", "Term", "Instructor", "Hours Per Week", "Overall Course")
+      data
+   }))
+
+   # Course: compare time spend acorss time
+   
    
    
    
