@@ -48,6 +48,12 @@ summer2 <- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets
 catelog <- c("Summer 1 16", "Summer 2 16", "Fall 16", "Spring 17")
 
 schedule <- fall
+chosen <<- data.frame()
+
+rateMyProfessor <- read.table(file = "https://raw.githubusercontent.com/seandkim/tartanhack2017/master/sean/data/rmpID.tsv?token=AV9HXYPBWjTwC6akfcyvV7G87tqwT9Fsks5YqKGkwA%3D%3D", sep="\t", header=TRUE, fill = TRUE,
+                              stringsAsFactors = FALSE)
+
+courseSelected = c()
 
 server <- function(input, output, session) {
    
@@ -116,7 +122,7 @@ server <- function(input, output, session) {
       
       p <- plot_ly(together, x = ~as.numeric(year.term), y = ~as.numeric(overall.teaching), color = ~as.factor(course.id), 
                    name = 'Overall Teaching', type = 'scatter', mode = 'lines') %>%
-         layout(xaxis = x, yaxis = y, title = plot.t) %>%
+         layout(xaxis = x, yaxis = c(list(range = c(0,5)), y), title = plot.t) %>%
          layout(legend = list(orientation = 'h'))   
       ggplotly(p)
    })
@@ -145,7 +151,7 @@ server <- function(input, output, session) {
       y <- list(title = "Overall Rating")
       p <- plot_ly(together, x = ~year.term, y = ~as.numeric(overall.course), color = ~as.factor(course.id),
                    name = 'Overall Course', type = 'scatter', mode = 'lines') %>%
-         layout(xaxis = x, yaxis = y, title = plot.t) %>%
+         layout(xaxis = x, yaxis = c(list(range = c(0,5)), y), title = plot.t) %>%
          layout(legend = list(orientation = 'h'))   
       ggplotly(p)
    })
@@ -216,48 +222,131 @@ server <- function(input, output, session) {
    # tab: schedule
    ############
    
-
+   # button listener
+   observeEvent(input$addCourse, {
+      ind <- which(as.character(schedule$Course.number) == substr(input$courseSchedule, 1,6))[1]
+      row <- schedule[ind, c("Course.number", "Course.name", "Units")]
+      course.num <- as.numeric(stri_replace_all_fixed(row$Course.number, "-", ""))
+      row$Hrs.Wk <- school[which(school$course.id == course.num)[1], c("hrs.per.week")]
+      chosen = rbind(chosen, row)
+      assign('chosen', chosen,envir=.GlobalEnv)
+      reset_courseSelection()
+   })
+   
+   observeEvent(input$removeAll, {
+      assign('chosen', data.frame(),envir=.GlobalEnv)
+      reset_courseSelection()
+   })
+   
+   reset_courseSelection <- function() {
+      output$scheduleTable <- renderDataTable({
+         chosen
+      })
+      reset_totalCount()
+      reset_totalListedHour()
+   }
+   
+   reset_totalListedHour <- function(){
+      output$totalListedTime<- renderText({
+         if (nrow(chosen) == 0) {
+            return ("Carried Unit: 0")
+         }
+         else {
+            return(
+               paste("Carried Unit: ",
+                     as.character(sum(as.numeric(levels(chosen$Units))[chosen$Units]))
+               )
+            )
+         }
+         
+      })
+   }
+   
+   reset_totalCount <- function(){
+      output$totalTime <- renderText({
+         if (nrow(chosen) == 0) {
+            return ("Total Anticipated Hour: 0")
+         }
+         else {
+            return(
+               paste("Total Anticipated Hour: ",
+                  as.character(sum(as.numeric(chosen$Hrs.Wk)))
+                  )
+            )
+         }
+         
+      })
+   }
+   reset_totalCount()
+   reset_totalListedHour()
+  
+   
+   get_course <- function() {
+      ind <- which(as.character(schedule$Course.number) == substr(input$courseSchedule, 1,6))
+      courseSelected = schedule[ind,]
+   }
    
    output$endTime <- renderText({
 
       ind <- which(as.character(schedule$Course.number) == substr(input$courseSchedule, 1,6))
-      courseSelected <- schedule[ind,]
-      print(courseSelected)
+      courseSelected = schedule[ind,]
       as.character(courseSelected$End.time)
       
    })
    
    output$location <- renderText({
-      "You have selected this"
+      ind <- which(as.character(schedule$Course.number) == substr(input$courseSchedule, 1,6))
+      courseSelected = schedule[ind,]
+      as.character(courseSelected$Location)
    })
    output$courseNumber <- renderText({
-      "You have selected this"
+      ind <- which(as.character(schedule$Course.number) == substr(input$courseSchedule, 1,6))
+      courseSelected = schedule[ind,]
+      as.character(courseSelected$Course.number)
    })
    output$courseName <- renderText({
-      "You have selected this"
+      ind <- which(as.character(schedule$Course.number) == substr(input$courseSchedule, 1,6))
+      courseSelected = schedule[ind,]
+      as.character(courseSelected$Course.name)
    })
    output$units <- renderText({
-      "You have selected this"
+      ind <- which(as.character(schedule$Course.number) == substr(input$courseSchedule, 1,6))
+      courseSelected = schedule[ind,]
+      paste(as.character(courseSelected$Units), "units")
    })
    output$department <- renderText({
-      "You have selected this"
+      ind <- which(as.character(schedule$Course.number) == substr(input$courseSchedule, 1,6))
+      courseSelected = schedule[ind,]
+      as.character(courseSelected$Department)
    })
    output$description <- renderText({
-      "You have selected this"
+      ind <- which(as.character(schedule$Course.number) == substr(input$courseSchedule, 1,6))
+      courseSelected = schedule[ind,]
+      as.character(courseSelected$Description)
    })
    output$instructors <- renderText({
-      "You have selected this"
+      ind <- which(as.character(schedule$Course.number) == substr(input$courseSchedule, 1,6))
+      courseSelected = schedule[ind,]
+      as.character(courseSelected$Instructors)
    })
-   output$days <- renderText({
-      "You have selected this"
-   })
-   output$startTime <- renderText({
-      "You have selected this"
+   output$time<- renderText({
+      ind <- which(as.character(schedule$Course.number) == substr(input$courseSchedule, 1,6))
+      courseSelected = schedule[ind,]
+      paste("Class Time: ", 
+            as.character(courseSelected$Start.time), "-", 
+            as.character(courseSelected$End.time), " | Class Day: ",
+            stri_replace_all_fixed(as.character(courseSelected$Day), "<>", ","))
    })
    
-   output$text1 <- renderText({ 
-      
+   output$scheduleTable <- renderDataTable({
+      if (nrow(chosen) == 0 ) {
+         chosen
+      }
+      else {
+         chosen[, c("Course.number", "Instructor", "Units")]
+      }
    })
+   
    
    #############
    # tab: faculty
@@ -279,8 +368,7 @@ server <- function(input, output, session) {
       y <- list(title = "Overall Teaching")
       p <- plot_ly(stats, x = ~as.numeric(year.term), y = ~as.numeric(overall.teaching), 
                    name = 'Overall Teaching', type = 'scatter', mode = 'lines') %>%
-         add_trace(line = list(color = 'rgb(255, 0, 0)', width = 4)) %>%
-         layout(xaxis = x, yaxis = y, title = plot.t)
+         layout(xaxis = x, yaxis = c(list(range = c(0,5)), y), title = plot.t)
       ggplotly(p)
    })
    
@@ -296,9 +384,35 @@ server <- function(input, output, session) {
       return (t(df[, 4:11]))
    }
    
+   output$rateRating <- renderText({
+      inds <- grep(input$faculty, rateMyProfessor$Instructor, ignore.case=TRUE, value=FALSE)
+      if (length(inds) == 0) {
+         return ("No rating found")
+      }
+      df <- (rateMyProfessor[inds, ])
+      paste("Average Rating", df$Average.Rating, "/", df$Total.number.of.rating)
+   })
+   
+   output$rateComment <- renderText({
+      inds <- grep(input$faculty, rateMyProfessor$Instructor, ignore.case=TRUE, value=FALSE)
+      if (length(inds) == 0) {
+         return ("")
+      }
+      df <- (rateMyProfessor[inds, ])
+      paste("Buzz word about this professor: \n", stri_replace_all_fixed(df$Key.Phrases, "<>", ",  "))
+   })
+   
+   
    # Dataset: show table of dataset
    output$fcetable <- renderDataTable({
-      school[4:14]
+      if (input$school_tab == "Courses") {
+         school[4:14]
+      }
+      else {
+         copy <-instructor[-aggregate.inds, ]
+         copy[aggregate.inds, ]$Course <- "Aggregate"
+         copy[, c("Instructor", "Course", "Hours.per.week", "Overall.teaching", "Overall.course", "Number.of.times.taught")]
+      }
    })
       
 }

@@ -10,6 +10,7 @@ library(data.table)
 library(shinydashboard)
 library(radarchart)
 library(DT)
+library(stringi)
 
 
 # Reading in Data by each school
@@ -62,6 +63,7 @@ summer2 <- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets
                       stringsAsFactors = FALSE)
 catelog <- c("Summer 1 16", "Summer 2 16", "Fall 16", "Spring 17")
 
+
 schedule <- fall
 
 # dashboard for app
@@ -87,37 +89,40 @@ ui <- dashboardPage(
       tags$style(type = "text/css", "#map {height: calc(100vh - 80px) !important;}"),
       tabItems(
          
-         # tab: raost
-         tabItem(tabName = "roast",
-                 h2("Overheard on R*** My Professors...."), tags$br(),
-                 fluidRow(
-                    box(
-                       
-                    )
-                 )
-         ),
-         
          # tab: schedule
          tabItem(tabName = "schedule",
                  h2("Scheduling Classes"), tags$br(),
                  fluidRow(
                     box(
+                       h3("Choose classes to add"),
+                       helpText("Search and selected a course to add to total."),
                        selectInput(inputId = 'term', label = 'Select Term', 
                                    choices = catelog, 
                                    selected = "Spring 17"),
                        selectInput(inputId = 'courseSchedule', label = 'Select Course', 
                                    choices = sort(paste(as.character(schedule$Course.number), as.character(schedule$Course.name), sep = " - ")), 
                                    selected = "02-201 Programming for Scientists"),
-                       textOutput("courseNumber"),
-                       textOutput("courseName"),
-                       textOutput("units"),
-                       textOutput("department"),
-                       textOutput("description"),
-                       textOutput("instructors"),
-                       textOutput("days"),
-                       textOutput("startTime"),
-                       textOutput("endTime"),
-                       textOutput("location")
+                       h3(textOutput("courseName")),
+                       h5(textOutput("courseNumber")),
+                       strong(textOutput("units")),
+                       strong(textOutput("instructors")),
+                       strong(textOutput("time")),
+                       p(textOutput("description")),
+                       actionButton("addCourse", "+ Add Course")
+                    ),
+                    box(
+                       h3("Selected Classes"),
+                       helpText("Classes chosen on the left panel will be displayed here."),
+                       fluidRow(
+                          column(
+                             DT::dataTableOutput("scheduleTable"), width = 12
+                          )
+                       ),
+                      
+                       h4(textOutput("totalListedTime")),
+                       h4(textOutput("totalTime")),
+                       actionButton("removeAll", "Clear All")
+                       
                     )
                  )
          ),
@@ -125,10 +130,10 @@ ui <- dashboardPage(
          # tab: dataset 
          tabItem(tabName = "datasets",
                  h2('FCE Raw Data'), tags$br(),
-                 selectInput(inputId = 'school_tab', label = 'Select College', 
-                             choices = schools_names, 
+                 selectInput(inputId = 'school_tab', label = 'Select Datasets', 
+                             choices = c("Courses", "Professors"), 
                              selected = "scs"),
-                 dataTableOutput('fcetable')
+                 h3(dataTableOutput('fcetable'))
          ),
          
          # tab: faculty
@@ -153,7 +158,12 @@ ui <- dashboardPage(
                                          DT::dataTableOutput("facultyTable"), width = 12
                                       )
                                    )
-                          )
+                          ),
+                          tabPanel("R*** My Professor",
+                                   h3("Comment about this professor on Rate my Professor:"),
+                                   strong(textOutput("rateRating")),
+                                   h4(textOutput("rateComment"))
+                                   )
                        )
                     ),
                     box(
