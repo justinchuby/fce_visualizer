@@ -92,7 +92,7 @@ server <- function(input, output, session) {
       x <- list(title = "Term")
       y <- list(title = "Overall Rating")
       p <- plot_ly(stats, x = ~year.term, y = ~enrollment, name = 'Number of enrollment', type = 'scatter', mode = 'lines') %>%
-         layout(xaxis = parse_x_axis(stats[, "year.term"]), yaxis = y, title = plot.t)
+         layout(xaxis = x, yaxis = y, title = plot.t)
       ggplotly(p)
    })
    
@@ -130,7 +130,7 @@ server <- function(input, output, session) {
       }
       x <- list(title = "Term")
       y <- list(title = "Overall Rating")
-      p <- plot_ly(stats, x = ~year.term, y = ~overall.course, name = 'Overall Course', type = 'scatter', mode = 'lines') %>%
+      p <- plot_ly(stats, x = ~year.term, y = ~as.numeric(overall.course), name = 'Overall Course', type = 'scatter', mode = 'lines') %>%
          layout(xaxis = x, yaxis = y, title = plot.t)
       ggplotly(p)
    })
@@ -149,7 +149,7 @@ server <- function(input, output, session) {
       }
       x <- list(title = "Term")
       y <- list(title = "Hrs/ Week")
-      p <- plot_ly(stats, x = ~year.term, y = ~hrs.per.week, name = 'Hrs Per Week', type = 'scatter', mode = 'lines') %>%
+      p <- plot_ly(stats, x = ~year.term, y = ~as.numeric(hrs.per.week), name = 'Hrs Per Week', type = 'scatter', mode = 'lines') %>%
          layout(xaxis = x, yaxis = y, title = plot.t)
       ggplotly(p)
    })
@@ -158,28 +158,59 @@ server <- function(input, output, session) {
    # Course: radar chart for course comparison
    output$faculty_radar <- renderChartJSRadar({
       
-      ind1 <- which(instructor$Instructor == input$faculty1)
-      ind2 <- which(instructor$Instructor == input$faculty2)
+      ind1 <- which(instructor$Instructor == input$faculty1 & (instructor$Course == 0))
+      ind2 <- which((instructor$Instructor == input$faculty2) & (instructor$Course == 0))
       name1 <- instructor$Instructor[ind1]
       name2 <- instructor$Instructor[ind2]
       
-      scores <- data.frame("Label" = c("Interest in Student Learning", 
-                                       "Explanation Course Requirement", "Clear Learning Gaols", "Provide Feedbacks",
-                                       "Importance of Subject" ,"Explains Subject Matter",
-                                       "Respect to Student" ,"Overall Teaching", "X"),
-                           as.character(Faculty1) = get_faculty_stats(instructor[ind1, ]),
-                           as.character(Faculty2) = get_faculty_stats(instructor[ind2, ]))
+      labs <- c("Interest in Student Learning", 
+                "Explanation Course Requirement", "Clear Learning Gaols", "Provide Feedbacks",
+                "Importance of Subject" ,"Explains Subject Matter",
+                "Respect to Student" ,"Overall Teaching")
+      
+      scores <- list(name1 = get_faculty_stats(instructor[ind1, ]),
+                     name2 = get_faculty_stats(instructor[ind2, ]))
       
       # render radar chart
-      chartJSRadar(scores = scores, maxScale = 5, showToolTipLabel = TRUE)
+      chartJSRadar(scores = scores, labs = labs, maxScale = 5, showToolTipLabel = TRUE)
+   })
+   
+   
+   
+   #############
+   # tab: faculty
+   ############
+   
+   # Course: time series for overall teaching
+   output$faculty_teaching <- renderPlotly({
+      
+      stats <- school[which(school$instructor == input$faculty), c("year.term", "overall.teaching")]
+      ord <- order(stats$year.term)
+      stats <- stats[ord, ]
+      
+      if (nrow(stats) <= 1) {
+         plot.t = "Not enough data to show overall teaching rating change"
+      } else {
+         plot.t = "Change of Overall Teaching Rating"
+      }
+      x <- list(title = "Term")
+      y <- list(title = "Overall Teaching")
+      p <- plot_ly(stats, x = ~as.numeric(year.term), y = ~as.numeric(overall.teaching), 
+                   name = 'Overall Teaching', type = 'scatter', mode = 'lines') %>%
+         layout(xaxis = x, yaxis = y, title = plot.t)
+      ggplotly(p)
    })
    
    # gets faculty basic stat by passing in related row of that faculty
    get_faculty_stats <- function(df) {
-      return (as.vector(df[, 4:11]))
+      return (df[, 4:11])
    }
+   
+   # Dataset: show table of dataset
+   output$fcetable <- renderDataTable({
+      school[4:14]
+   })
       
-
 }
 
 shinyServer(server)

@@ -27,7 +27,10 @@ scs <- scs[-1, ]
 scs_instr <- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets/master/instr_scs.tsv", sep="\t", header=TRUE)
 
 schools <- c(cfa, scs)
-schools_names <- c("CFA", "SCS", "MCS")
+schools_names <- c("CFA - College of Fine Arts", 
+                   "SCS - School of Computer Science", 
+                   "MCS - Mellon College of Science", 
+                   "DC - Dietrich College of H&SS")
 school <- scs 
 instructor <- scs_instr
 
@@ -69,6 +72,45 @@ ui <- dashboardPage(
       tags$style(type = "text/css", "#map {height: calc(100vh - 80px) !important;}"),
       tabItems(
          
+         # tab: dataset 
+         tabItem(tabName = "datasets",
+                 h2('FCE Data'), tags$br(),
+                 selectInput(inputId = 'school_tab', label = 'Select College', 
+                             choices = schools_names, 
+                             selected = "scs"),
+                 dataTableOutput('fcetable')
+         ),
+         
+         tabItem(tabName = "faculty",
+                 h2("Faculty Profile"), tags$br(),
+                 fluidRow(
+                    box(
+                       h4("Faculty Profile"),
+                       helpText("Select one faculty members to view faculty basic statistics."), tags$br(),
+                       selectInput(inputId = 'faculty', label = 'Select a Faculty Memberr', 
+                                   choices = as.character(unique(instructor$Instructor)), 
+                                   selected = "ANIL ADA"),
+                       
+                       tabPanel("Overall Teaching",
+                                plotlyOutput(outputId = "faculty_teaching", height = "400px", width = "600px"),
+                                helpText()
+                       )
+                       
+                    ),
+                    box(
+                       h4("Faculty Comparison"), 
+                       helpText("Select two faculty members to view faculty statistics comparisons."), tags$br(),
+                       selectInput(inputId = 'faculty1', label = 'Select Faculty 1', 
+                                   choices = as.character(unique(school$instructor)), 
+                                   selected = "DAVID KOSBIE"),
+                       selectInput(inputId = 'faculty2', label = 'Select Faculty 2', 
+                                   choices = as.character(unique(school$instructor)), 
+                                   selected = "DAVID KOSBIE"),
+                       chartJSRadarOutput("faculty_radar", width = "450", height = "300")
+                    )
+                 )
+         ),
+         
          tabItem(tabName = "course",
                  h2("Course Profile"), tags$br(),
                  fluidRow(
@@ -85,7 +127,7 @@ ui <- dashboardPage(
                           ),
                           
                           tabPanel("Overall Teaching",
-                                   plotlyOutput(outputId = "research_teaching", height = "400px", width = "600px"),
+                                   plotlyOutput(outputId = "overall_teaching", height = "400px", width = "600px"),
                                    helpText()
                           ),
                           
@@ -100,24 +142,12 @@ ui <- dashboardPage(
                           )
                       
                       )
-                  ),
-                  
-                  box(
-                     h4("Faculty Comparison"), 
-                     helpText("Select two faculty members to view faculty statistics comparisons."), tags$br(),
-                     selectInput(inputId = 'faculty1', label = 'Select Faculty 1', 
-                                 choices = as.character(unique(school$instructor)), 
-                                 selected = "DAVID KOSBIE"),
-                     selectInput(inputId = 'faculty2', label = 'Select Faculty 2', 
-                                 choices = as.character(unique(school$instructor)), 
-                                 selected = "DAVID KOSBIE"),
-                     chartJSRadarOutput("faculty_radar", width = "450", height = "300")
-                 )
+                  )
                )
             )
-         )
       )
    )
+)
 
 
 
