@@ -10,6 +10,7 @@ library(data.table)
 library(shinydashboard)
 library(radarchart)
 library(DT)
+library(chartjs)
 
 # Reading in Data
 schools <- c("cfa", "scs")
@@ -33,11 +34,20 @@ scs <- scs[-inds.wu,]
 
 scs_instr <- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets/master/instr_scs.tsv", sep="\t", header=TRUE)
 
+course <- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets/master/course_fall.tsv", sep="\t", header=TRUE, fill = TRUE)
+
 schools <- c(cfa, scs)
 schools_names <- c("CFA", "SCS", "MCS")
 school <- scs 
 instructor <- scs_instr
 
+fall <- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets/master/course_fall.tsv", sep="\t", header=TRUE, fill = TRUE)
+spring <- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets/master/course_spring.tsv", sep="\t", header=TRUE, fill = TRUE)
+summer1<- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets/master/course_summer1.tsv", sep="\t", header=TRUE, fill = TRUE)
+summer2 <- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets/master/course_summer2.tsv", sep="\t", header=TRUE, fill = TRUE)
+catelog <- c("Summer 1 16", "Summer 2 16", "Fall 16", "Spring 17")
+
+schedule <- fall
 
 server <- function(input, output, session) {
    
@@ -50,106 +60,122 @@ server <- function(input, output, session) {
       return (substr(str, 1, 5))
    }
    
-   get_term_letter <- function(semester) {
-      if (semester == 0.1) {
-         return("s")
-      }
-      if (semester == 0.8) {
-         return ("f")
-      }
-      if (semester == 0.6) {
-         return ("su")
-      }
-      return ("")
-   }
-   
-   parse_x_axis <- function(terms) {
-      labels = c()
-      for (i in 1:length(terms)) {
-         term = terms[i]
-         year = round(terms)
-         semester = term - year
-         thislabel = paste(as.character(year %% 100), get_term_letter(semester), sep = "")
-         labels = c(labels, thislabel)
-      }
-      return (labels)
-   }
-   
    
    # Course: time series for enrollment
    output$num_enrollment <- renderPlotly({
       
-      stats <- school[which(school$course.id == parse_courseID(input$course)), c("year.term", "enrollment"),]
-      ord <- order(stats$year.term)
-      stats <- stats[ord, ]
+      stats1 <- school[which(school$course.id == parse_courseID(input$course1)), c("course.id", "year.term", "enrollment"),]
+      
+      if (input$course2 != "-") {
+         stats2 <- school[which(school$course.id == parse_courseID(input$course2)), c("course.id", "year.term", "enrollment"),]
+         together <- data.frame(rbind(stats1, stats2))
+      }
+      else {
+         together <- stats1
+      }
       
       if (nrow(stats) <= 1) {
          plot.t = "Not enough data to show overall enrollment number change"
       } else {
-         plot.t = "Change of Number of Enrollment Rating"
+         plot.t = "Change of Number of Enrollment"
       }
-      x <- list(title = "Term")
+      x <- list(title = "Semester")
       y <- list(title = "Overall Rating")
-      p <- plot_ly(stats, x = ~as.numeric(year.term), y = ~as.numeric(enrollment), name = 'Number of enrollment', type = 'scatter', mode = 'lines') %>%
-         layout(xaxis = x, yaxis = y, title = plot.t)
+      
+      ord <- order(together$year.term, decreasing = TRUE)
+
+      p <- plot_ly(together[ord,], x = ~as.numeric(year.term), y = ~as.numeric(enrollment), color = ~as.factor(course.id)
+                   ,name = 'Overall Enrollment in Class', type = 'scatter', mode = 'lines') %>%
+         layout(xaxis = x, yaxis = y, title = plot.t) %>%
+         layout(legend = list(orientation = 'h'))    
       ggplotly(p)
    })
    
    # Course: time series for overall teaching
    output$overall_teaching <- renderPlotly({
       
-      stats <- school[which(school$course.id == parse_courseID(input$course)), c("year.term", "overall.teaching")]
-      ord <- order(stats$year.term)
-      stats <- stats[ord, ]
+      stats1 <- school[which(school$course.id == parse_courseID(input$course1)), c("course.id", "year.term", "overall.teaching")]
       
-      if (nrow(stats) <= 1) {
+      if (input$course2 != "-") {
+         stats2 <- school[which(school$course.id == parse_courseID(input$course2)), c("course.id", "year.term", "overall.teaching"),]
+         together <- data.frame(rbind(stats1, stats2))
+      }
+      else {
+         together <- stats1
+      }
+      ord <- order(together$year.term, decreasing = TRUE)
+      together <- together[ord, ]
+      
+      if (nrow(stats1) <= 1) {
          plot.t = "Not enough data to show overall teaching rating change"
       } else {
          plot.t = "Change of Overall Teaching Rating"
       }
-      x <- list(title = "Term")
+      x <- list(title = "Semester")
       y <- list(title = "Overall Teaching")
-      p <- plot_ly(stats, x = ~as.numeric(year.term), y = ~as.numeric(overall.teaching), 
+      
+      p <- plot_ly(together, x = ~as.numeric(year.term), y = ~as.numeric(overall.teaching), color = ~as.factor(course.id), 
                    name = 'Overall Teaching', type = 'scatter', mode = 'lines') %>%
-         layout(xaxis = x, yaxis = c(list(range = c(0, 5)), y), title = plot.t)
+         layout(xaxis = x, yaxis = y, title = plot.t) %>%
+         layout(legend = list(orientation = 'h'))   
       ggplotly(p)
    })
    
    # Course: time series for course rating
    output$overall_course <- renderPlotly({
       
-      stats <- school[which(school$course.id == parse_courseID(input$course)), c("year.term", "overall.course")]
-      ord <- order(stats$year.term)
-      stats <- stats[ord, ]
+      stats1 <- school[which(school$course.id == parse_courseID(input$course1)), c("course.id", "year.term", "overall.course")]
       
-      if (nrow(stats) <= 1) {
+      if (input$course2 != "-") {
+         stats2 <- school[which(school$course.id == parse_courseID(input$course2)), c("course.id", "year.term", "overall.course"),]
+         together <- data.frame(rbind(stats1, stats2))
+      }
+      else {
+         together <- stats1
+      }
+      ord <- order(together$year.term, decreasing = TRUE)
+      together <- together[ord, ]
+      
+      if (nrow(stats1) <= 1) {
          plot.t = "Not enough data to show overall course rating change"
       } else {
          plot.t = "Change of Overall Course Rating"
       }
       x <- list(title = "Term")
       y <- list(title = "Overall Rating")
-      p <- plot_ly(stats, x = ~year.term, y = ~as.numeric(overall.course), name = 'Overall Course', type = 'scatter', mode = 'lines') %>%
-         layout(xaxis = x, yaxis = c(list(range = c(0, 5)), y), title = plot.t)
+      p <- plot_ly(together, x = ~year.term, y = ~as.numeric(overall.course), color = ~as.factor(course.id),
+                   name = 'Overall Course', type = 'scatter', mode = 'lines') %>%
+         layout(xaxis = x, yaxis = y, title = plot.t) %>%
+         layout(legend = list(orientation = 'h'))   
       ggplotly(p)
    })
    
    # Course: time series for hour spend
    output$hrs_per_week <- renderPlotly({
       
-      stats <- school[which(school$course.id == parse_courseID(input$course)), c("year.term", "hrs.per.week")]
-      ord <- order(stats$year.term)
-      stats <- stats[ord, ]
+      stats1 <- school[which(school$course.id == parse_courseID(input$course1)), c("course.id", "year.term", "hrs.per.week")]
       
-      if (nrow(stats) <= 1) {
+      if (input$course2 != "-") {
+         stats2 <- school[which(school$course.id == parse_courseID(input$course2)), c("course.id", "year.term", "hrs.per.week"),]
+         together <- data.frame(rbind(stats1, stats2))
+      }
+      else {
+         together <- stats1
+      }
+      ord <- order(together$year.term, decreasing = TRUE)
+      together <- together[ord, ]
+      
+      if (nrow(stats1) <= 1) {
          plot.t = "Not enough data to show hours of week change"
       } else {
          plot.t = "Change of Hours per Week"
       }
       x <- list(title = "Term")
       y <- list(title = "Hrs/ Week")
-      p <- plot_ly(stats, x = ~year.term, y = ~as.numeric(hrs.per.week), name = 'Hrs Per Week', type = 'scatter', mode = 'lines') %>%
-         layout(xaxis = x, yaxis = y, title = plot.t)
+      p <- plot_ly(together, x = ~year.term, y = ~as.numeric(hrs.per.week), color = ~as.factor(course.id),
+                   name = 'Hrs Per Week', type = 'scatter', mode = 'lines') %>%
+         layout(xaxis = x, yaxis = y, title = plot.t) %>%
+         layout(legend = list(orientation = 'h'))   
       ggplotly(p)
    })
    
@@ -186,7 +212,52 @@ server <- function(input, output, session) {
    # Course: compare time spend acorss time
    
    
+   ############
+   # tab: schedule
+   ############
    
+
+   
+   output$endTime <- renderText({
+
+      ind <- which(as.character(schedule$Course.number) == substr(input$courseSchedule, 1,6))
+      courseSelected <- schedule[ind,]
+      print(courseSelected)
+      as.character(courseSelected$End.time)
+      
+   })
+   
+   output$location <- renderText({
+      "You have selected this"
+   })
+   output$courseNumber <- renderText({
+      "You have selected this"
+   })
+   output$courseName <- renderText({
+      "You have selected this"
+   })
+   output$units <- renderText({
+      "You have selected this"
+   })
+   output$department <- renderText({
+      "You have selected this"
+   })
+   output$description <- renderText({
+      "You have selected this"
+   })
+   output$instructors <- renderText({
+      "You have selected this"
+   })
+   output$days <- renderText({
+      "You have selected this"
+   })
+   output$startTime <- renderText({
+      "You have selected this"
+   })
+   
+   output$text1 <- renderText({ 
+      
+   })
    
    #############
    # tab: faculty
@@ -195,7 +266,7 @@ server <- function(input, output, session) {
    # Faculty: time series for overall teaching
    output$faculty_teaching <- renderPlotly({
       
-      stats <- school[which(tolower(school$instructor) == tolower(input$faculty)), c("year.term", "overall.teaching")]
+      stats <- school[which(school$instructor == input$faculty), c("year.term", "overall.teaching")]
       ord <- order(stats$year.term)
       stats <- stats[ord, ]
       
@@ -209,7 +280,7 @@ server <- function(input, output, session) {
       p <- plot_ly(stats, x = ~as.numeric(year.term), y = ~as.numeric(overall.teaching), 
                    name = 'Overall Teaching', type = 'scatter', mode = 'lines') %>%
          add_trace(line = list(color = 'rgb(255, 0, 0)', width = 4)) %>%
-         layout(xaxis = x, yaxis = c(list(range = c(0, 5)), y), title = plot.t)
+         layout(xaxis = x, yaxis = y, title = plot.t)
       ggplotly(p)
    })
    

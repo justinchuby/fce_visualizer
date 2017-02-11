@@ -13,18 +13,36 @@ library(DT)
 
 
 # Reading in Data by each school
+
+clean_schoool_tsv <- function(url) {
+   df <- read.table(file = url, sep="\t", header=TRUE)
+   df <- df[-1, ]
+   section.inds <- which(df$section %in% c("W", "U", "W1", "W2", "X", "", "W3", "W4", "Section"))
+   df <- df[-section.inds,]
+   
+   #space.inds <- grep("^[::space::]", df$course.name)
+   #df <- df[- spaceinds,]
+   df
+}
+
+clean_school_csv <- function(url) {
+   df <- read.csv(url, stringsAsFactors = F, as.is = TRUE)
+   df <- df[-1, ]
+   section.inds <- which(df$section %in% c("W", "U", "W1", "W2", "X", "", "W3", "W4", "Section"))
+   df <- df[-section.inds,]
+
+   df
+}
 schools <- c("cfa", "scs")
 
-cfa <- read.csv("https://raw.githubusercontent.com/yeukyul/datasets/master/fce_cfa.csv", stringsAsFactors = F, as.is = TRUE)
-cfa.overall <- cfa[1,]
-cfa <- cfa[-1, ]
+cfa <- clean_school_csv("https://raw.githubusercontent.com/yeukyul/datasets/master/fce_cfa.csv")
 
 scs <- read.csv("https://raw.githubusercontent.com/yeukyul/datasets/master/fce_scs.csv", stringsAsFactors = F, as.is = TRUE)
 scs.overall <- scs[1,]
 scs <- scs[-1, ]
 
 
-scs_instr <- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets/master/instr_all.tsv", sep="\t", header=TRUE)
+scs_instr <- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets/master/instr_scs.tsv", sep="\t", header=TRUE)
 
 schools <- c(cfa, scs)
 schools_names <- c("CFA - College of Fine Arts", 
@@ -34,33 +52,29 @@ schools_names <- c("CFA - College of Fine Arts",
 school <- scs 
 instructor <- scs_instr
 
+fall <- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets/master/course_fall.tsv", sep="\t", header=TRUE, fill = TRUE,
+                   stringsAsFactors = FALSE)
+spring <- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets/master/course_spring.tsv", sep="\t", header=TRUE, fill = TRUE,
+                     stringsAsFactors = FALSE)
+summer1<- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets/master/course_summer1.tsv", sep="\t", header=TRUE, fill = TRUE,
+                     stringsAsFactors = FALSE)
+summer2 <- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets/master/course_summer2.tsv", sep="\t", header=TRUE, fill = TRUE,
+                      stringsAsFactors = FALSE)
+catelog <- c("Summer 1 16", "Summer 2 16", "Fall 16", "Spring 17")
 
-# GGPlot theme
-yeukyul_315_theme <- theme(
-   plot.title = element_text(margin = margin(0, 0, 10, 0),
-                             hjust = 0.5),
-   legend.key = element_rect(fill = "white"),
-   legend.background = element_rect(fill = "white"),
-   panel.grid.major = element_line(colour = "white"),
-   panel.grid.minor = element_blank(),
-   axis.text.x = element_text(size = rel(0.7)),
-   axis.text.y = element_text(size = rel(0.7)),
-   axis.title.y = element_text(margin = margin(0, 10, 0, 0)),
-   axis.title.x = element_text(margin = margin(10, 0, 0, 0))
-)
+schedule <- fall
 
-
+# dashboard for app
 sidebar <- dashboardSidebar(
    sidebarMenu(
       menuItem("Courses", tabName = "course", icon = icon("book")),
       menuItem("Faculty", tabName = "faculty", icon = icon("user-circle")),
-      menuItem("Trending", tabName = "trend", icon = icon("line-chart")),
-      menuItem("Roast", tabName = "rateMyProfessor", icon = icon("fire")),
+      menuItem("Schedule", tabName = "schedule", icon = icon("calendar-o")),
       menuItem("Dataset", tabName = "datasets", icon = icon("table"))
    )
 )
 
-
+# main UI function 
 ui <- dashboardPage(
    skin = "black",
    dashboardHeader(title = "FCE @ CMU"),
@@ -73,31 +87,51 @@ ui <- dashboardPage(
       tags$style(type = "text/css", "#map {height: calc(100vh - 80px) !important;}"),
       tabItems(
          
+         # tab: raost
+         tabItem(tabName = "roast",
+                 h2("Overheard on R*** My Professors...."), tags$br(),
+                 fluidRow(
+                    box(
+                       
+                    )
+                 )
+         ),
+         
+         # tab: schedule
+         tabItem(tabName = "schedule",
+                 h2("Scheduling Classes"), tags$br(),
+                 fluidRow(
+                    box(
+                       selectInput(inputId = 'term', label = 'Select Term', 
+                                   choices = catelog, 
+                                   selected = "Spring 17"),
+                       selectInput(inputId = 'courseSchedule', label = 'Select Course', 
+                                   choices = sort(paste(as.character(schedule$Course.number), as.character(schedule$Course.name), sep = " - ")), 
+                                   selected = "02-201 Programming for Scientists"),
+                       textOutput("courseNumber"),
+                       textOutput("courseName"),
+                       textOutput("units"),
+                       textOutput("department"),
+                       textOutput("description"),
+                       textOutput("instructors"),
+                       textOutput("days"),
+                       textOutput("startTime"),
+                       textOutput("endTime"),
+                       textOutput("location")
+                    )
+                 )
+         ),
+         
          # tab: dataset 
          tabItem(tabName = "datasets",
                  h2('FCE Raw Data'), tags$br(),
                  selectInput(inputId = 'school_tab', label = 'Select College', 
                              choices = schools_names, 
                              selected = "scs"),
-                 dataTableOutput('fcetable'),
-                 
-                 box(
-                    h4("Course Comparison"), 
-                    helpText("Select two courses to view course comparisons."), tags$br(),
-                    selectInput(inputId = 'course1', label = 'Select Course 1', 
-                                choices = sort(unique(school$id.name)), 
-                                selected = "15112 - FNDMTLS OF PGMG & CS"),
-                    selectInput(inputId = 'course2', label = 'Select Course 2', 
-                                choices = sort(unique(school$id.name)), 
-                                selected = "15110 - PRINCPLS OF COMPUTNG"),
-                    tabsetPanel(
-                       tabPanel(
-                          plotOutput(outputId = "plotb2", height = "500px")
-                       )
-                    )
-                 )
+                 dataTableOutput('fcetable')
          ),
          
+         # tab: faculty
          tabItem(tabName = "faculty",
                  h2("Faculty Profile"), tags$br(),
                  p("Explore what a faculty member has taught before and what opinions everybody gives."),
@@ -107,7 +141,7 @@ ui <- dashboardPage(
                        helpText("Select one faculty members to view faculty basic statistics."), tags$br(),
                        selectInput(inputId = 'faculty', label = 'Select a Faculty Member', 
                                    choices = sort(as.character(unique(instructor$Instructor))), 
-                                   selected = "Anil Ada"),
+                                   selected = "ANIL ADA"),
                        tabsetPanel(
                           tabPanel("Overall Teaching",
                                    plotlyOutput(outputId = "faculty_teaching", height = "400px", width = "600px"),
@@ -130,7 +164,7 @@ ui <- dashboardPage(
                                    selected = "DAVID KOSBIE"),
                        selectInput(inputId = 'faculty2', label = 'Select Faculty 2', 
                                    choices = sort(as.character(unique(school$instructor))), 
-                                   selected = "AMY OGAN"),
+                                   selected = "DAVID KOSBIE"),
                        chartJSRadarOutput("faculty_radar", width = "450", height = "300")
                     )
                  )
@@ -143,41 +177,50 @@ ui <- dashboardPage(
                  fluidRow(
                     # Course Basic Stats
                     box(
-                       h4("Course Comparison"), 
-                       helpText("Select two courses to view courses statistics comparisons."), tags$br(),
+                       h4("Course History"), 
+                       helpText("Select course to view teaching history, past course evaluations."), tags$br(),
                        selectInput(inputId = 'course', label = 'Select Course Number', 
                                    choices = sort(as.character(unique(school$id.name))), 
                                    selected = "15112 - FNDMTLS OF PGMG & CS"),
-                       tabsetPanel(
-                          tabPanel("Overall Course Rating",
-                                   plotlyOutput(outputId = "overall_course", height = "400px", width = "600px")
-                          ),
-                          
-                          tabPanel("Overall Teaching",
-                                   plotlyOutput(outputId = "overall_teaching", height = "400px", width = "600px"),
-                                   helpText()
-                          ),
-                          
-                          tabPanel("Hours Per Week",
-                                   plotlyOutput(outputId = "hrs_per_week", height = "400px", width = "600px"),
-                                   helpText("Hours per week is calculated as an aggregate mean of student reported hours.")
-                          ),
-                          
-                          tabPanel("Number of Enrollment",
-                                   plotlyOutput(outputId = "num_enrollment", height = "400px", width = "600px"),
-                                   helpText("Hours per week is calculated as an aggregate mean of student reported hours.")
-                          ),
-                          
-                          tabPanel("Teaching History",
-                                   fluidRow(
-                                      column(
-                                         DT::dataTableOutput("courseTable"), width = 12
-                                      )
-                                   )
-                                   
+                       fluidRow(
+                          column(
+                             DT::dataTableOutput("courseTable"), width = 12
                           )
-                      
-                      )
+                       )
+                                   
+                  ),
+                  
+                  box(
+                     h4("Course Comparison"), 
+                     helpText("Select two courses to view course comparisons."), tags$br(),
+                     selectInput(inputId = 'course1', label = 'Select Course 1', 
+                                 choices = sort(unique(school$id.name)), 
+                                 selected = "15112 - FNDMTLS OF PGMG & CS"),
+                     selectInput(inputId = 'course2', label = 'Select Course 2', 
+                                 choices = sort(unique(school$id.name)), 
+                                 selected = "-"),
+                     tabsetPanel(
+                        tabPanel("Overall Course Rating",
+                                 plotlyOutput(outputId = "overall_course", height = "400px", width = "600px")
+                        ),
+                        
+                        tabPanel("Overall Teaching",
+                                 plotlyOutput(outputId = "overall_teaching", height = "400px", width = "600px"),
+                                 helpText()
+                        ),
+                        
+                        tabPanel("Hours Per Week",
+                                 plotlyOutput(outputId = "hrs_per_week", height = "400px", width = "600px"),
+                                 helpText("Hours per week is calculated as an aggregate mean of student reported hours.")
+                        ),
+                        
+                        tabPanel("Number of Enrollment",
+                                 plotlyOutput(outputId = "num_enrollment", height = "400px", width = "600px"),
+                                 helpText("Hours per week is calculated as an aggregate mean of student reported hours.")
+                        )
+                     ),
+                     helpText("Semesters are encoded as year, with start month behind year to indicate start month of the semester."),
+                     helpText("spring term = year.1, summer term = year.6, fall term = year.8")
                   )
                )
             )
