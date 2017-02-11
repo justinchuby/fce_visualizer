@@ -11,7 +11,7 @@ body {
 }
 
 #sideBar{
-    background-color: "#193441";
+    background-color: red;
 }
 
 input[type="number"] {

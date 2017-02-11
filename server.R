@@ -181,7 +181,7 @@ server <- function(input, output, session) {
    # tab: faculty
    ############
    
-   # Course: time series for overall teaching
+   # Faculty: time series for overall teaching
    output$faculty_teaching <- renderPlotly({
       
       stats <- school[which(school$instructor == input$faculty), c("year.term", "overall.teaching")]
@@ -197,13 +197,21 @@ server <- function(input, output, session) {
       y <- list(title = "Overall Teaching")
       p <- plot_ly(stats, x = ~as.numeric(year.term), y = ~as.numeric(overall.teaching), 
                    name = 'Overall Teaching', type = 'scatter', mode = 'lines') %>%
+         add_trace(line = list(color = 'rgb(255, 0, 0)', width = 4)) %>%
          layout(xaxis = x, yaxis = y, title = plot.t)
       ggplotly(p)
    })
    
+   output$facultyTable <- DT::renderDataTable(DT::datatable({
+      data <- instructor[which(instructor$Instructor == input$faculty & instructor$Course != 0), ]
+      data <- data[order(as.numeric(data$Course)),c("Course", "Hours.per.week", "Overall.teaching", "Overall.course")]
+      names(data) <- c("Course", "Hrs Per Week", "Overall Teaching", "Overall Course")
+      data
+   }))
+   
    # gets faculty basic stat by passing in related row of that faculty
    get_faculty_stats <- function(df) {
-      return (df[, 4:11])
+      return (t(df[, 4:11]))
    }
    
    # Dataset: show table of dataset

@@ -55,7 +55,8 @@ sidebar <- dashboardSidebar(
       menuItem("Courses", tabName = "course", icon = icon("book")),
       menuItem("Faculty", tabName = "faculty", icon = icon("user-circle")),
       menuItem("Trending", tabName = "trend", icon = icon("line-chart")),
-      menuItem("Dataset", tabName = "datasets", icon = icon("table"))
+      menuItem("Dataset", tabName = "datasets", icon = icon("table")),
+      menuItem("Roast", tabName = "rateMyProfessor", icon = icon("fire"))
    )
 )
 
@@ -74,7 +75,7 @@ ui <- dashboardPage(
          
          # tab: dataset 
          tabItem(tabName = "datasets",
-                 h2('FCE Data'), tags$br(),
+                 h2('FCE Raw Data'), tags$br(),
                  selectInput(inputId = 'school_tab', label = 'Select College', 
                              choices = schools_names, 
                              selected = "scs"),
@@ -83,28 +84,36 @@ ui <- dashboardPage(
          
          tabItem(tabName = "faculty",
                  h2("Faculty Profile"), tags$br(),
+                 p("Explore what a faculty member has taught before and what opinions everybody gas."),
                  fluidRow(
                     box(
                        h4("Faculty Profile"),
                        helpText("Select one faculty members to view faculty basic statistics."), tags$br(),
                        selectInput(inputId = 'faculty', label = 'Select a Faculty Memberr', 
-                                   choices = as.character(unique(instructor$Instructor)), 
+                                   choices = sort(as.character(unique(instructor$Instructor))), 
                                    selected = "ANIL ADA"),
-                       
-                       tabPanel("Overall Teaching",
-                                plotlyOutput(outputId = "faculty_teaching", height = "400px", width = "600px"),
-                                helpText()
+                       tabsetPanel(
+                          tabPanel("Overall Teaching",
+                                   plotlyOutput(outputId = "faculty_teaching", height = "400px", width = "600px"),
+                                   helpText()
+                          ),
+                          tabPanel("Teaching History",
+                                   fluidRow(
+                                      column(
+                                         DT::dataTableOutput("facultyTable"), width = 12
+                                      )
+                                   )
+                          )
                        )
-                       
                     ),
                     box(
                        h4("Faculty Comparison"), 
                        helpText("Select two faculty members to view faculty statistics comparisons."), tags$br(),
                        selectInput(inputId = 'faculty1', label = 'Select Faculty 1', 
-                                   choices = as.character(unique(school$instructor)), 
+                                   choices = sort(as.character(unique(school$instructor))), 
                                    selected = "DAVID KOSBIE"),
                        selectInput(inputId = 'faculty2', label = 'Select Faculty 2', 
-                                   choices = as.character(unique(school$instructor)), 
+                                   choices = sort(as.character(unique(school$instructor))), 
                                    selected = "DAVID KOSBIE"),
                        chartJSRadarOutput("faculty_radar", width = "450", height = "300")
                     )
@@ -119,7 +128,7 @@ ui <- dashboardPage(
                        h4("Course Comparison"), 
                        helpText("Select two courses to view courses statistics comparisons."), tags$br(),
                        selectInput(inputId = 'course', label = 'Select Course Number', 
-                                   choices = as.character(unique(school$id.name)), 
+                                   choices = sort(as.character(unique(school$id.name))), 
                                    selected = "15112 - FNDMTLS OF PGMG"),
                        tabsetPanel(
                           tabPanel("Overall Course Rating",
