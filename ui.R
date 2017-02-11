@@ -107,7 +107,7 @@ ui <- dashboardPage(
                        helpText("Select one faculty members to view faculty basic statistics."), tags$br(),
                        selectInput(inputId = 'faculty', label = 'Select a Faculty Member', 
                                    choices = sort(as.character(unique(instructor$Instructor))), 
-                                   selected = "ANIL ADA"),
+                                   selected = "Anil Ada"),
                        tabsetPanel(
                           tabPanel("Overall Teaching",
                                    plotlyOutput(outputId = "faculty_teaching", height = "400px", width = "600px"),
@@ -147,7 +147,7 @@ ui <- dashboardPage(
                        helpText("Select two courses to view courses statistics comparisons."), tags$br(),
                        selectInput(inputId = 'course', label = 'Select Course Number', 
                                    choices = sort(as.character(unique(school$id.name))), 
-                                   selected = "15112 - FNDMTLS OF PGMG"),
+                                   selected = "15112 - FNDMTLS OF PGMG & CS"),
                        tabsetPanel(
                           tabPanel("Overall Course Rating",
                                    plotlyOutput(outputId = "overall_course", height = "400px", width = "600px")

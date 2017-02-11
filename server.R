@@ -91,7 +91,7 @@ server <- function(input, output, session) {
       x <- list(title = "Term")
       y <- list(title = "Overall Rating")
       p <- plot_ly(stats, x = ~as.numeric(year.term), y = ~as.numeric(enrollment), name = 'Number of enrollment', type = 'scatter', mode = 'lines') %>%
-         layout(xaxis = x, yaxis = c(list(0, 5), y), title = plot.t)
+         layout(xaxis = x, yaxis = y, title = plot.t)
       ggplotly(p)
    })
    
@@ -111,7 +111,7 @@ server <- function(input, output, session) {
       y <- list(title = "Overall Teaching")
       p <- plot_ly(stats, x = ~as.numeric(year.term), y = ~as.numeric(overall.teaching), 
                    name = 'Overall Teaching', type = 'scatter', mode = 'lines') %>%
-         layout(xaxis = x, yaxis = c(list(0, 5), y), title = plot.t)
+         layout(xaxis = x, yaxis = c(list(range = c(0, 5)), y), title = plot.t)
       ggplotly(p)
    })
    
@@ -130,7 +130,7 @@ server <- function(input, output, session) {
       x <- list(title = "Term")
       y <- list(title = "Overall Rating")
       p <- plot_ly(stats, x = ~year.term, y = ~as.numeric(overall.course), name = 'Overall Course', type = 'scatter', mode = 'lines') %>%
-         layout(xaxis = x, yaxis = c(list(0, 5), y), title = plot.t)
+         layout(xaxis = x, yaxis = c(list(range = c(0, 5)), y), title = plot.t)
       ggplotly(p)
    })
    
@@ -209,7 +209,7 @@ server <- function(input, output, session) {
       p <- plot_ly(stats, x = ~as.numeric(year.term), y = ~as.numeric(overall.teaching), 
                    name = 'Overall Teaching', type = 'scatter', mode = 'lines') %>%
          add_trace(line = list(color = 'rgb(255, 0, 0)', width = 4)) %>%
-         layout(xaxis = x, yaxis = c(list(0, 5), y), title = plot.t)
+         layout(xaxis = x, yaxis = c(list(range = c(0, 5)), y), title = plot.t)
       ggplotly(p)
    })
    
