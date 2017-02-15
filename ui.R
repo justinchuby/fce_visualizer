@@ -39,19 +39,19 @@ schools <- c("cfa", "scs")
 cfa <- clean_school_csv("https://raw.githubusercontent.com/yeukyul/datasets/master/fce_cfa.csv")
 
 scs <- read.csv("https://raw.githubusercontent.com/yeukyul/datasets/master/fce_scs.csv", stringsAsFactors = F, as.is = TRUE)
-scs.overall <- scs[1,]
-scs <- scs[-1, ]
+fce_all <- read.csv("https://raw.githubusercontent.com/yeukyul/datasets/master/fce_all_modified.csv", stringsAsFactors = F)
 
 
 scs_instr <- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets/master/instr_scs.tsv", sep="\t", header=TRUE)
+all_instr <- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets/master/instr_all.tsv", sep="\t", header=TRUE)
 
 schools <- c(cfa, scs)
 schools_names <- c("CFA - College of Fine Arts", 
                    "SCS - School of Computer Science", 
                    "MCS - Mellon College of Science", 
                    "DC - Dietrich College of H&SS")
-school <- scs 
-instructor <- scs_instr
+school <- fce_all
+instructor <- all_instr
 
 fall <- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets/master/course_fall.tsv", sep="\t", header=TRUE, fill = TRUE,
                    stringsAsFactors = FALSE)
@@ -159,7 +159,7 @@ ui <- dashboardPage(
                                       )
                                    )
                           ),
-                          tabPanel("R*** My Professor",
+                          tabPanel("Rate My Professor",
                                    h3("Comment about this professor on Rate my Professor:"),
                                    strong(textOutput("rateRating")),
                                    h4(textOutput("rateComment"))
@@ -170,11 +170,11 @@ ui <- dashboardPage(
                        h4("Faculty Comparison"), 
                        helpText("Select two faculty members to view faculty statistics comparisons."), tags$br(),
                        selectInput(inputId = 'faculty1', label = 'Select Faculty 1', 
-                                   choices = sort(as.character(unique(school$instructor))), 
-                                   selected = "DAVID KOSBIE"),
+                                   choices = sort(as.character(unique(instructor$Instructor))), 
+                                   selected = "David Kosbie"),
                        selectInput(inputId = 'faculty2', label = 'Select Faculty 2', 
-                                   choices = sort(as.character(unique(school$instructor))), 
-                                   selected = "DAVID KOSBIE"),
+                                   choices = sort(as.character(unique(instructor$Instructor))), 
+                                   selected = "Amy Ogan"),
                        chartJSRadarOutput("faculty_radar", width = "450", height = "300")
                     )
                  )

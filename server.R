@@ -10,7 +10,6 @@ library(data.table)
 library(shinydashboard)
 library(radarchart)
 library(DT)
-library(chartjs)
 
 # Reading in Data
 schools <- c("cfa", "scs")
@@ -31,15 +30,22 @@ scs <- scs[-1, ]
 inds.wu <- which(scs$section %in% c("W", "U", "W1", "W2", "X"))
 scs <- scs[-inds.wu,]
 
+course <- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets/master/course_fall.tsv", sep="\t", header=TRUE, fill = TRUE)
+fce_all <- read.csv("https://raw.githubusercontent.com/yeukyul/datasets/master/fce_all_modified.csv", stringsAsFactors = F)
 
 scs_instr <- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets/master/instr_scs.tsv", sep="\t", header=TRUE)
+all_instr <- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets/master/instr_all.tsv", sep="\t", header=TRUE)
 
-course <- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets/master/course_fall.tsv", sep="\t", header=TRUE, fill = TRUE)
+inds.wu <- which(fce_all$section %in% c("W", "U", "W1", "W2", "X"))
+fce_all <- fce_all[-inds.wu, ]
 
 schools <- c(cfa, scs)
-schools_names <- c("CFA", "SCS", "MCS")
-school <- scs 
-instructor <- scs_instr
+schools_names <- c("CFA - College of Fine Arts", 
+                   "SCS - School of Computer Science", 
+                   "MCS - Mellon College of Science", 
+                   "DC - Dietrich College of H&SS")
+school <- fce_all
+instructor <- all_instr
 
 fall <- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets/master/course_fall.tsv", sep="\t", header=TRUE, fill = TRUE)
 spring <- read.table(file = "https://raw.githubusercontent.com/yeukyul/datasets/master/course_spring.tsv", sep="\t", header=TRUE, fill = TRUE)
@@ -63,7 +69,7 @@ server <- function(input, output, session) {
    #############################
    
    parse_courseID <- function(str) {
-      return (substr(str, 1, 5))
+      return (as.integer(substr(str, 1, 5)))
    }
    
    
@@ -80,7 +86,7 @@ server <- function(input, output, session) {
          together <- stats1
       }
       
-      if (nrow(stats) <= 1) {
+      if (nrow(stats1) <= 1) {
          plot.t = "Not enough data to show overall enrollment number change"
       } else {
          plot.t = "Change of Number of Enrollment"
@@ -215,9 +221,7 @@ server <- function(input, output, session) {
       data
    }))
 
-   # Course: compare time spend acorss time
-   
-   
+
    ############
    # tab: schedule
    ############
@@ -355,7 +359,7 @@ server <- function(input, output, session) {
    # Faculty: time series for overall teaching
    output$faculty_teaching <- renderPlotly({
       
-      stats <- school[which(school$instructor == input$faculty), c("year.term", "overall.teaching")]
+      stats <- school[which(school$instructor == toupper(input$faculty)), c("year.term", "overall.teaching")]
       ord <- order(stats$year.term)
       stats <- stats[ord, ]
       
@@ -374,8 +378,8 @@ server <- function(input, output, session) {
    
    output$facultyTable <- DT::renderDataTable(DT::datatable({
       data <- instructor[which(instructor$Instructor == input$faculty & instructor$Course != 0), ]
-      data <- data[order(as.numeric(data$Course)),c("Course", "Hours.per.week", "Overall.teaching", "Overall.course")]
-      names(data) <- c("Course", "Hrs Per Week", "Overall Teaching", "Overall Course")
+      data <- data[order(as.numeric(data$Course)),c("Course", "Hours.per.week", "Overall.teaching", "Overall.course", "Number.of.times.taught")]
+      names(data) <- c("Course", "Hrs Per Week", "Overall Teaching", "Overall Course", "Number.of.times.taught")
       data
    }))
    
