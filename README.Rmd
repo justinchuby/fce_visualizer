@@ -10,7 +10,7 @@ Make your decisions with confidence based on years of past student reviews. Visu
 
 #Inspiration
 
-CMU currently holds a huge amount of faculty and course evaluation data. However, through the FCE webpage, the data can barely be used effectively, let alone efficiently. Students need to put significant effort (and wait a long time) to make the FCE website useful to them.
+Carnegie Mellon University (CMU) currently holds a huge amount of faculty and course evaluation data. However, through the Faculty Course Evaluation (FCE) webpage, the data can barely be used effectively, let alone efficiently. Students need to put significant effort (and wait a long time) to make the FCE website useful to them.
 
 Often, due to the difficulty of using the FCE website, students will miss important key information that may determine their class choices. For instance, students may not know that the real number of instruction hours sum up to be significantly higher than the number of units. Students may also wish to gain insight on whether alternative instructors will provide better learning experience for them.
 
