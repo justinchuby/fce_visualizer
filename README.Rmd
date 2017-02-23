@@ -1,10 +1,14 @@
-S.IO
-====
+---
+output:
+  md_document:
+    variant: markdown_github
+---
+
+#S.IO
 
 Make your decisions with confidence based on years of past student reviews. Visualized.
 
-Inspiration
-===========
+#Inspiration
 
 CMU currently holds a huge amount of faculty and course evaluation data. However, through the FCE webpage, the data can barely be used effectively, let alone efficiently. Students need to put significant effort (and wait a long time) to make the FCE website useful to them.
 
@@ -12,51 +16,52 @@ Often, due to the difficulty of using the FCE website, students will miss import
 
 We believe that, given the data we can retrieve and utilize from the FCE website, we can create S.IO--an effective platform for students to make better academic decisions regarding their course selections. Using the Scottylabs Course API as a starting point, S.IO has gone far from where it started to be the best platform for CMU students to gain insights for the courses they may consider to take in the future.
 
-What it does
-============
+#What it does
+
 
 FCE currently offers a giant table listing each instructor for each iteration of each course, without any further analytic refinements possible.
 
 S.IO utilizes and synthesizes data from FCE to improve students' life by offering them faculty and course insights for any faculty member and any course effectively, efficiently. Students can do any of (but not limited to) the following:
 
-Exploring course evaluation results over time (course rating, teaching quality, average hours per week, and number of students--all for up to the past six years). Explore faculty evaluation results over time, with emphasis on overall teaching rating over time. Compare courses in various aspects, as well as faculty members in eight rating aspects offered by FCE. Simulate scheduling a course, where students will see the expected real hours per week required with their schedule, compared to the number of units they are taking. View a table of all instructors and their performance for a specific course and in total. S.IO's advantage over the FCE website includes the following:
+Exploring course evaluation results over time (course rating, teaching quality, average hours per week, and number of students--all for up to the past six years).
+Explore faculty evaluation results over time, with emphasis on overall teaching rating over time.
+Compare courses in various aspects, as well as faculty members in eight rating aspects offered by FCE.
+Simulate scheduling a course, where students will see the expected real hours per week required with their schedule, compared to the number of units they are taking.
+View a table of all instructors and their performance for a specific course and in total.
+S.IO's advantage over the FCE website includes the following:
 
--   The data is synthesized to what is relevant for students, such as instructor's aggregate performance for a specific class over time, and over all classes over time.
++ The data is synthesized to what is relevant for students, such as instructor's aggregate performance for a specific class over time, and over all classes over time.
 
--   The data is displayed in ways meaningful to students, such as through graphs that allow students to compare two instructor's performance, and to compare two classes in various aspects.
++ The data is displayed in ways meaningful to students, such as through graphs that allow students to compare two instructor's performance, and to compare two classes in various aspects.
 
--   The data is searchable, and returns relevant results in an instant.
++ The data is searchable, and returns relevant results in an instant.
 
--   S.IO is responsive.fast, and offers a low barrier of entry for users.
++ S.IO is responsive.fast, and offers a low barrier of entry for users.
 
-How we built it
-===============
+
+# How we built it
 
 We retrieved the complete, robust, but not-necessarily human-readable data from the FCE website. S.IO utilizes Scottylabs Course API (thanks, Scottylabs!) to retrieve the course information and parse the FCE information into JSON (Python-readable) format. Then, some Python magic--by that, we mean converting the input into aggregated per-instructor (and, by extension, per-course) data, S.IO is augmented with a data source that is filled with useful information. Lastly, we scraped text feedback from ratemyprofessor.com and used Microsoft Text Analysis API to extract the key phrases that can describe each professor. While understated, our R development connoisseur built the entire front-end, which manipulates the original data, the per-instructor data, and the course data into a one useful, awesome package.
 
-Challenges we ran into
-======================
+
+# Challenges we ran into
 
 Manipulating data, especially without SQL support, is challenging. Turning data into the ways we want them to requires significant drawing, debugging, and patience. Furthermore, manipulating data within R also takes a while.
 
-Accomplishments that we're proud of
-===================================
+# Accomplishments that we're proud of
 
 S.IO is feature complete! Despite some limitations, S.IO has been developed to contain all the features we believe are necessary to be readily used by students. In other words, after some further debugging, S.IO can be used by students on campus to, hopefully, be more informed about their course choices in the future.
 
-What we learned
-===============
+#What we learned
 
 A great project to work on is a great start for a project. A knowledge of working in both the front and the back will come useful in hackathons, since it'll be immensely helpful to support one another when the loads are imbalanced!
 
-What's next for S.IO
-====================
+#What's next for S.IO
 
 After some bugfixing, we'll continue to explore ways on which students can benefit from using S.IO. Some improvements we wish to make is to inform students immediately, upon selecting a course, about the aggregate past performance of the instructor. We're working on hosting the website.
 
-Team
-====
+#Team
 
--   **Matthew Salim**: <http://github.com/msalim>
--   **Sean D Kim**
--   **Yeuk Yu Lee**: <http://github.com/yeukyul>
++ **Matthew Salim**: http://github.com/msalim
++ **Sean D Kim**
++ **Yeuk Yu Lee**: http://github.com/yeukyul
